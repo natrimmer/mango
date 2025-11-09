@@ -90,12 +90,18 @@ claude_commit models
 ```bash
 git add .                # Stage your changes
 claude_commit commit     # Generate a commit message
+
+# Advanced options
+claude_commit commit --type feat                    # Force specific commit type
+claude_commit commit --context "fixing bug #123"    # Provide additional context
+claude_commit commit --count 3                      # Generate 3 options to choose from
+claude_commit commit --type fix --context "auth issue" --count 2  # Combine flags
 ```
 
 ## Available Models
 
 - `claude-opus-4-0` - Most capable, slower and more expensive
-- `claude-sonnet-4-0` - Balanced performance and speed  
+- `claude-sonnet-4-0` - Balanced performance and speed
 - `claude-3-7-sonnet-latest` - **Default** - Fast and efficient
 - `claude-3-5-sonnet-latest` - Previous generation, reliable
 - `claude-3-5-haiku-latest` - Fastest and most cost-effective
@@ -129,12 +135,36 @@ claude-3-opus-latest
 ### Generating Commits
 
 ```bash
+# Basic usage
 $ git add .
 $ claude_commit commit
 ⚙️  Analyzing git diff with Claude AI...
 ✓ Commit message generated
 
 git commit -m "feat: add user authentication and password reset functionality"
+
+# Force a specific commit type
+$ claude_commit commit --type fix
+⚙️  Analyzing git diff with Claude AI...
+✓ Commit message generated
+
+git commit -m "fix: resolve authentication timeout issue"
+
+# Provide additional context
+$ claude_commit commit --context "resolves issue #123"
+⚙️  Analyzing git diff with Claude AI...
+✓ Commit message generated
+
+git commit -m "fix: prevent null pointer in user profile handler"
+
+# Generate multiple options
+$ claude_commit commit --count 3
+⚙️  Analyzing git diff with Claude AI...
+✓ Commit message options generated
+
+1. feat: add user authentication system
+2. feat: implement login and registration endpoints
+3. feat: add JWT-based authentication middleware
 ```
 
 ### Version Information
@@ -145,6 +175,54 @@ Claude Commit v1.2.3
 Build Date: 2024-01-15T10:30:00Z
 Commit: abc1234
 Generate conventional commit messages with Anthropic's Claude
+```
+
+## Advanced Commit Options
+
+### --type flag
+
+Force the LLM to use a specific commit type. Useful when you know the category of your changes and want to avoid ambiguity.
+
+```bash
+claude_commit commit --type feat    # Force feature type
+claude_commit commit --type fix     # Force bug fix type
+claude_commit commit --type docs    # Force documentation type
+```
+
+### --context flag
+
+Provide additional context to help the LLM generate a more accurate commit message. This is especially useful when:
+- The changes relate to a specific issue or ticket
+- The purpose isn't obvious from the diff alone
+- You want to emphasize a particular aspect of the changes
+
+```bash
+claude_commit commit --context "resolves issue #123"
+claude_commit commit --context "breaking change for API v2"
+claude_commit commit --context "performance optimization for large datasets"
+```
+
+### --count flag
+
+Generate multiple commit message options. This addresses ambiguity by giving you choices when the nature of the change could be interpreted different ways (e.g., is it a "feat" or a "fix"?).
+
+```bash
+claude_commit commit --count 3    # Get 3 different options
+claude_commit commit --count 5    # Get 5 different options
+```
+
+When using `--count`, the tool displays numbered options instead of a git command, allowing you to pick the most appropriate one.
+
+### Combining Flags
+
+All flags can be combined for maximum control:
+
+```bash
+# Get 3 fix-type options with context
+claude_commit commit --type fix --context "resolves #123" --count 3
+
+# Get 2 feature options with context
+claude_commit commit --type feat --context "new payment gateway" --count 2
 ```
 
 ## Commit Message Format
@@ -192,6 +270,11 @@ Your configuration is stored in a JSON file at `~/.claude-commit/config.json`. T
 - Comprehensive help system
 - Multiple model support with easy switching
 - Clean error handling and user feedback
+- **Advanced commit options:**
+  - Force specific commit types with `--type`
+  - Provide additional context with `--context`
+  - Generate multiple options with `--count`
+  - Combine all flags for maximum control
 
 ## Development
 
