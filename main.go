@@ -382,7 +382,7 @@ func NewCommitService(configService *ConfigService, anthropicService *AnthropicS
 	}
 }
 
-func (cs *CommitService) GenerateCommitMessage() error {
+func (cs *CommitService) GenerateCommitMessage(commitType string) error {
 	config, err := cs.configService.LoadConfig()
 	if err != nil {
 		return err
@@ -404,7 +404,7 @@ func (cs *CommitService) GenerateCommitMessage() error {
 
 	cs.printer.Print(Dim + "⚙️  Analyzing git diff with Claude AI..." + Reset)
 
-	prompt := cs.buildPrompt(files, diff)
+	prompt := cs.buildPrompt(files, diff, commitType)
 
 	commitMsg, err := cs.anthropicService.GenerateCommitMessage(*config, prompt)
 	if err != nil {
@@ -421,10 +421,15 @@ func (cs *CommitService) GenerateCommitMessage() error {
 	return nil
 }
 
-func (cs *CommitService) buildPrompt(files, diff string) string {
+func (cs *CommitService) buildPrompt(files, diff, commitType string) string {
+	typeInstruction := ""
+	if commitType != "" {
+		typeInstruction = fmt.Sprintf("\nIMPORTANT: The commit type MUST be '%s'.", commitType)
+	}
+
 	return fmt.Sprintf(`Generate a conventional commit message based on the following git diff.
 
-IMPORTANT: Return ONLY the commit message, nothing else. No explanations, no analysis, no additional text.
+IMPORTANT: Return ONLY the commit message, nothing else. No explanations, no analysis, no additional text.%s
 
 The message should follow this format: <type>: <description>
 
@@ -455,7 +460,7 @@ Here are the files changed:
 Here is the git diff:
 %s
 
-Commit message:`, files, diff)
+Commit message:`, typeInstruction, files, diff)
 }
 
 // Utility functions
@@ -514,8 +519,8 @@ func (app *App) HandleHelp() {
 	app.ShowHelp()
 }
 
-func (app *App) HandleCommit() error {
-	return app.commitService.GenerateCommitMessage()
+func (app *App) HandleCommit(commitType string) error {
+	return app.commitService.GenerateCommitMessage(commitType)
 }
 
 func (app *App) ShowVersion() {
@@ -575,6 +580,7 @@ func (app *App) ShowHelp() {
 	app.printer.Print("  claude_commit view")
 	app.printer.Print("  claude_commit models")
 	app.printer.Print("  claude_commit commit")
+	app.printer.Print("  claude_commit commit --type feat  # Force commit type")
 	app.printer.Print("  claude_commit --version")
 
 	// Show conventional commit info
@@ -612,6 +618,7 @@ func main() {
 	model := configCmd.String("model", DefaultModel, "Anthropic model to use")
 
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
+	commitType := commitCmd.String("type", "", "Commit type (feat, fix, docs, etc.)")
 	viewCmd := flag.NewFlagSet("view", flag.ExitOnError)
 	modelsCmd := flag.NewFlagSet("models", flag.ExitOnError)
 	helpCmd := flag.NewFlagSet("help", flag.ExitOnError)
@@ -657,7 +664,7 @@ func main() {
 			app.printer.PrintError(fmt.Sprintf("Error parsing commit arguments: %v", err))
 			os.Exit(1)
 		}
-		err = app.HandleCommit()
+		err = app.HandleCommit(*commitType)
 	case "help":
 		err = helpCmd.Parse(os.Args[2:])
 		if err != nil {

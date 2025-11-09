@@ -755,7 +755,7 @@ func TestCommitService_GenerateCommitMessage(t *testing.T) {
 			anthropicService := NewAnthropicService(mockHTTP, mockPrinter)
 			commitService := NewCommitService(configService, anthropicService, mockGit, mockPrinter)
 
-			err := commitService.GenerateCommitMessage()
+			err := commitService.GenerateCommitMessage("")
 
 			if tt.expectErr {
 				if err == nil {
@@ -962,27 +962,74 @@ func TestApp_HandleHelp(t *testing.T) {
 
 // Test prompt building
 func TestCommitService_buildPrompt(t *testing.T) {
-	service := &CommitService{}
-	files := "main.go\ntest.go"
-	diff := "diff --git a/main.go"
-
-	prompt := service.buildPrompt(files, diff)
-
-	// Check that prompt contains expected elements
-	expectedElements := []string{
-		"conventional commit message",
-		"<type>: <description>",
-		"feat:", "fix:", "docs:",
-		"imperative mood",
-		"Maximum 50 characters",
-		files,
-		diff,
+	tests := []struct {
+		name               string
+		files              string
+		diff               string
+		commitType         string
+		expectedElements   []string
+		unexpectedElements []string
+	}{
+		{
+			name:       "without type specified",
+			files:      "main.go\ntest.go",
+			diff:       "diff --git a/main.go",
+			commitType: "",
+			expectedElements: []string{
+				"conventional commit message",
+				"<type>: <description>",
+				"feat:", "fix:", "docs:",
+				"imperative mood",
+				"Maximum 50 characters",
+				"main.go\ntest.go",
+				"diff --git a/main.go",
+			},
+			unexpectedElements: []string{
+				"commit type MUST be",
+			},
+		},
+		{
+			name:       "with type specified as feat",
+			files:      "main.go\ntest.go",
+			diff:       "diff --git a/main.go",
+			commitType: "feat",
+			expectedElements: []string{
+				"conventional commit message",
+				"<type>: <description>",
+				"commit type MUST be 'feat'",
+				"main.go\ntest.go",
+				"diff --git a/main.go",
+			},
+		},
+		{
+			name:       "with type specified as fix",
+			files:      "api.go",
+			diff:       "diff --git a/api.go",
+			commitType: "fix",
+			expectedElements: []string{
+				"commit type MUST be 'fix'",
+				"api.go",
+			},
+		},
 	}
 
-	for _, element := range expectedElements {
-		if !strings.Contains(prompt, element) {
-			t.Errorf("Expected prompt to contain %q", element)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := &CommitService{}
+			prompt := service.buildPrompt(tt.files, tt.diff, tt.commitType)
+
+			for _, element := range tt.expectedElements {
+				if !strings.Contains(prompt, element) {
+					t.Errorf("Expected prompt to contain %q", element)
+				}
+			}
+
+			for _, element := range tt.unexpectedElements {
+				if strings.Contains(prompt, element) {
+					t.Errorf("Expected prompt NOT to contain %q", element)
+				}
+			}
+		})
 	}
 }
 
