@@ -755,7 +755,7 @@ func TestCommitService_GenerateCommitMessage(t *testing.T) {
 			anthropicService := NewAnthropicService(mockHTTP, mockPrinter)
 			commitService := NewCommitService(configService, anthropicService, mockGit, mockPrinter)
 
-			err := commitService.GenerateCommitMessage("", "", 1)
+			err := commitService.GenerateCommitMessage("", "", 1, false, false)
 
 			if tt.expectErr {
 				if err == nil {
@@ -1099,6 +1099,107 @@ func TestCommitService_buildPrompt(t *testing.T) {
 				if strings.Contains(prompt, element) {
 					t.Errorf("Expected prompt NOT to contain %q", element)
 				}
+			}
+		})
+	}
+}
+
+// Test dry-run and verbose flags
+func TestCommitService_DryRunAndVerbose(t *testing.T) {
+	tests := []struct {
+		name           string
+		dryRun         bool
+		verbose        bool
+		expectAPICall  bool
+		expectedOutput []string
+	}{
+		{
+			name:          "dry-run mode shows prompt, no API call",
+			dryRun:        true,
+			verbose:       false,
+			expectAPICall: false,
+			expectedOutput: []string{
+				"Prompt being sent to Claude:",
+				"Dry run mode - API not called",
+			},
+		},
+		{
+			name:          "verbose mode shows prompt and response",
+			dryRun:        false,
+			verbose:       true,
+			expectAPICall: true,
+			expectedOutput: []string{
+				"Prompt being sent to Claude:",
+				"Raw API Response:",
+			},
+		},
+		{
+			name:          "both flags: dry-run takes precedence",
+			dryRun:        true,
+			verbose:       true,
+			expectAPICall: false,
+			expectedOutput: []string{
+				"Prompt being sent to Claude:",
+				"Dry run mode - API not called",
+			},
+		},
+		{
+			name:          "normal mode: no extra output",
+			dryRun:        false,
+			verbose:       false,
+			expectAPICall: true,
+			expectedOutput: []string{
+				"✓ Commit message generated",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockFS := NewMockFileSystem()
+			mockGit := &MockGitClient{}
+			mockHTTP := &MockHTTPClient{}
+			mockPrinter := &MockPrinter{}
+
+			// Setup
+			mockFS.homeDir = "/tmp"
+			config := Config{ApiKey: "test-key", Model: "test-model"}
+			configJSON, _ := json.Marshal(config)
+			mockFS.readData = configJSON
+
+			mockGit.stagedDiff = "diff --git a/file.go"
+			mockGit.stagedFiles = "file.go"
+
+			response := AnthropicResponse{
+				Content: []struct {
+					Text string `json:"text"`
+				}{
+					{Text: "feat: add new feature"},
+				},
+			}
+			responseJSON, _ := json.Marshal(response)
+			mockHTTP.response = createHTTPResponse(200, string(responseJSON))
+
+			configService := NewConfigService(mockFS, mockPrinter)
+			anthropicService := NewAnthropicService(mockHTTP, mockPrinter)
+			commitService := NewCommitService(configService, anthropicService, mockGit, mockPrinter)
+
+			err := commitService.GenerateCommitMessage("", "", 1, tt.dryRun, tt.verbose)
+
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+			}
+
+			// Check expected output
+			for _, expected := range tt.expectedOutput {
+				if !mockPrinter.ContainsMessage(expected) {
+					t.Errorf("Expected output to contain %q, messages: %v", expected, mockPrinter.GetMessages())
+				}
+			}
+
+			// Verify API call behavior
+			if tt.expectAPICall && mockHTTP.response == nil {
+				t.Error("Expected API call but none was made")
 			}
 		})
 	}

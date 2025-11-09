@@ -382,7 +382,7 @@ func NewCommitService(configService *ConfigService, anthropicService *AnthropicS
 	}
 }
 
-func (cs *CommitService) GenerateCommitMessage(commitType, context string, count int) error {
+func (cs *CommitService) GenerateCommitMessage(commitType, context string, count int, dryRun, verbose bool) error {
 	config, err := cs.configService.LoadConfig()
 	if err != nil {
 		return err
@@ -402,9 +402,26 @@ func (cs *CommitService) GenerateCommitMessage(commitType, context string, count
 		return fmt.Errorf("no staged changes found. Use git add to stage changes")
 	}
 
-	cs.printer.Print(Dim + "⚙️  Analyzing git diff with Claude AI..." + Reset)
-
 	prompt := cs.buildPrompt(files, diff, commitType, context, count)
+
+	// If verbose or dry-run, show the prompt
+	if verbose || dryRun {
+		cs.printer.Print(Bold + Cyan + "Prompt being sent to Claude:" + Reset)
+		cs.printer.Print(Dim + "─────────────────────────────────────────" + Reset)
+		cs.printer.Print(prompt)
+		cs.printer.Print(Dim + "─────────────────────────────────────────" + Reset)
+		cs.printer.Print("")
+	}
+
+	// If dry-run, stop here without calling the API
+	if dryRun {
+		cs.printer.PrintWarning("⚠️  Dry run mode - API not called")
+		return nil
+	}
+
+	if !dryRun {
+		cs.printer.Print(Dim + "⚙️  Analyzing git diff with Claude AI..." + Reset)
+	}
 
 	commitMsg, err := cs.anthropicService.GenerateCommitMessage(*config, prompt)
 	if err != nil {
@@ -412,6 +429,15 @@ func (cs *CommitService) GenerateCommitMessage(commitType, context string, count
 	}
 
 	commitMsg = strings.TrimSpace(commitMsg)
+
+	// If verbose, show the raw response
+	if verbose {
+		cs.printer.Print(Bold + Cyan + "Raw API Response:" + Reset)
+		cs.printer.Print(Dim + "─────────────────────────────────────────" + Reset)
+		cs.printer.Print(commitMsg)
+		cs.printer.Print(Dim + "─────────────────────────────────────────" + Reset)
+		cs.printer.Print("")
+	}
 
 	if count > 1 {
 		// Multiple messages - display them numbered
@@ -545,8 +571,8 @@ func (app *App) HandleHelp() {
 	app.ShowHelp()
 }
 
-func (app *App) HandleCommit(commitType, context string, count int) error {
-	return app.commitService.GenerateCommitMessage(commitType, context, count)
+func (app *App) HandleCommit(commitType, context string, count int, dryRun, verbose bool) error {
+	return app.commitService.GenerateCommitMessage(commitType, context, count, dryRun, verbose)
 }
 
 func (app *App) ShowVersion() {
@@ -609,6 +635,9 @@ func (app *App) ShowHelp() {
 	app.printer.Print("  claude_commit commit --type feat  # Force commit type")
 	app.printer.Print("  claude_commit commit --context \"fixing authentication bug\"  # Add context")
 	app.printer.Print("  claude_commit commit --count 3  # Generate 3 options")
+	app.printer.Print("  claude_commit commit --dry-run  # Show prompt without API call")
+	app.printer.Print("  claude_commit commit --verbose  # Show prompt and API interaction")
+	app.printer.Print("  claude_commit commit -v  # Short form of --verbose")
 	app.printer.Print("  claude_commit commit --type fix --context \"resolves issue #123\"  # Combine flags")
 	app.printer.Print("  claude_commit --version")
 
@@ -650,6 +679,9 @@ func main() {
 	commitType := commitCmd.String("type", "", "Commit type (feat, fix, docs, etc.)")
 	commitContext := commitCmd.String("context", "", "Additional context to guide commit message generation")
 	commitCount := commitCmd.Int("count", 1, "Number of commit message options to generate")
+	commitDryRun := commitCmd.Bool("dry-run", false, "Show prompt without calling API")
+	commitVerbose := commitCmd.Bool("verbose", false, "Show prompt and full API interaction")
+	commitVerboseShort := commitCmd.Bool("v", false, "Show prompt and full API interaction (short form)")
 	viewCmd := flag.NewFlagSet("view", flag.ExitOnError)
 	modelsCmd := flag.NewFlagSet("models", flag.ExitOnError)
 	helpCmd := flag.NewFlagSet("help", flag.ExitOnError)
@@ -695,7 +727,9 @@ func main() {
 			app.printer.PrintError(fmt.Sprintf("Error parsing commit arguments: %v", err))
 			os.Exit(1)
 		}
-		err = app.HandleCommit(*commitType, *commitContext, *commitCount)
+		// Combine verbose flags (--verbose or -v)
+		verbose := *commitVerbose || *commitVerboseShort
+		err = app.HandleCommit(*commitType, *commitContext, *commitCount, *commitDryRun, verbose)
 	case "help":
 		err = helpCmd.Parse(os.Args[2:])
 		if err != nil {

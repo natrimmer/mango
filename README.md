@@ -95,6 +95,9 @@ claude_commit commit     # Generate a commit message
 claude_commit commit --type feat                    # Force specific commit type
 claude_commit commit --context "fixing bug #123"    # Provide additional context
 claude_commit commit --count 3                      # Generate 3 options to choose from
+claude_commit commit --dry-run                      # Show prompt without API call
+claude_commit commit --verbose                      # Show full API interaction
+claude_commit commit -v                             # Short form of --verbose
 claude_commit commit --type fix --context "auth issue" --count 2  # Combine flags
 ```
 
@@ -165,6 +168,34 @@ $ claude_commit commit --count 3
 1. feat: add user authentication system
 2. feat: implement login and registration endpoints
 3. feat: add JWT-based authentication middleware
+
+# Dry run to see the prompt without API call
+$ claude_commit commit --dry-run
+Prompt being sent to Claude:
+─────────────────────────────────────────
+Generate a conventional commit message based on the following git diff.
+[... full prompt displayed ...]
+─────────────────────────────────────────
+
+⚠️  Dry run mode - API not called
+
+# Verbose mode to see full interaction
+$ claude_commit commit --verbose
+Prompt being sent to Claude:
+─────────────────────────────────────────
+Generate a conventional commit message based on the following git diff.
+[... full prompt displayed ...]
+─────────────────────────────────────────
+
+⚙️  Analyzing git diff with Claude AI...
+Raw API Response:
+─────────────────────────────────────────
+feat: add user authentication system
+─────────────────────────────────────────
+
+✓ Commit message generated
+
+git commit -m "feat: add user authentication system"
 ```
 
 ### Version Information
@@ -213,6 +244,39 @@ claude_commit commit --count 5    # Get 5 different options
 
 When using `--count`, the tool displays numbered options instead of a git command, allowing you to pick the most appropriate one.
 
+### --dry-run flag
+
+Show the prompt that will be sent to Claude without actually calling the API. Perfect for:
+- Testing how different flags affect the prompt
+- Understanding what information is sent to Claude
+- Saving API costs during experimentation
+
+```bash
+claude_commit commit --dry-run
+claude_commit commit --type feat --count 3 --dry-run    # See how flags affect prompt
+```
+
+When using `--dry-run`, the tool displays the complete prompt and exits without making an API call.
+
+### --verbose flag (or -v)
+
+Show the full API interaction including both the prompt sent and the raw response received. Useful for:
+- Debugging issues with commit message generation
+- Understanding how Claude interprets your changes
+- Seeing the complete request/response cycle
+
+```bash
+claude_commit commit --verbose
+claude_commit commit -v                    # Short form
+claude_commit commit -v --type fix         # Combine with other flags
+```
+
+When using `--verbose`, the tool shows:
+1. The prompt being sent to Claude
+2. The "Analyzing..." message
+3. The raw API response
+4. The final formatted output
+
 ### Combining Flags
 
 All flags can be combined for maximum control:
@@ -223,6 +287,12 @@ claude_commit commit --type fix --context "resolves #123" --count 3
 
 # Get 2 feature options with context
 claude_commit commit --type feat --context "new payment gateway" --count 2
+
+# Test prompt generation without API call
+claude_commit commit --type feat --context "new feature" --dry-run
+
+# Debug full API interaction
+claude_commit commit --verbose --count 3
 ```
 
 ## Commit Message Format
@@ -274,6 +344,8 @@ Your configuration is stored in a JSON file at `~/.claude-commit/config.json`. T
   - Force specific commit types with `--type`
   - Provide additional context with `--context`
   - Generate multiple options with `--count`
+  - Show prompt without API call with `--dry-run`
+  - Debug with full visibility using `--verbose` or `-v`
   - Combine all flags for maximum control
 
 ## Development
