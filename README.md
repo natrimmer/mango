@@ -350,6 +350,30 @@ Your configuration is stored in a JSON file at `~/.claude-commit/config.json`. T
 
 ## Development
 
+### Architecture
+
+The codebase follows a clean architecture pattern with clear separation of concerns:
+
+```
+internal/
+├── ui/           # Console output, colors, and printer interface
+├── filesystem/   # File system abstraction for testability
+├── git/          # Git client for diff and staged file operations
+├── config/       # Configuration management and persistence
+├── model/        # Model listing and management
+├── anthropic/    # Anthropic API client
+├── commit/       # Commit message generation logic
+└── app/          # Application orchestration and CLI handlers
+```
+
+**Key Design Principles:**
+- **Dependency Injection**: All dependencies are injected via interfaces
+- **Testability**: Each package has comprehensive tests with mock implementations
+- **Single Responsibility**: Each package has one clear purpose
+- **Interface Segregation**: Small, focused interfaces for easy mocking
+
+Each package exports mock implementations (in `mock.go`) for cross-package testing, making it easy to write isolated unit tests.
+
 ### Building from Source
 
 ```bash
