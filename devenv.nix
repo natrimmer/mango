@@ -35,7 +35,7 @@
       COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
       echo "Building Claude Commit $VERSION"
-      go build -ldflags "-X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA" -o claude_commit .
+      go build -ldflags "-X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA -X github.com/natrimmer/claude_commit/internal/app.Version=$VERSION -X github.com/natrimmer/claude_commit/internal/app.BuildDate=$BUILD_DATE -X github.com/natrimmer/claude_commit/internal/app.CommitSHA=$COMMIT_SHA" -o claude_commit .
     '';
 
     build-release.exec = ''
@@ -44,7 +44,7 @@
       COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
       echo "Building Claude Commit $VERSION (release)"
-      CGO_ENABLED=0 go build -ldflags "-w -s -X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA" -o claude_commit .
+      CGO_ENABLED=0 go build -ldflags "-w -s -X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA -X github.com/natrimmer/claude_commit/internal/app.Version=$VERSION -X github.com/natrimmer/claude_commit/internal/app.BuildDate=$BUILD_DATE -X github.com/natrimmer/claude_commit/internal/app.CommitSHA=$COMMIT_SHA" -o claude_commit .
     '';
 
     version.exec = ''
