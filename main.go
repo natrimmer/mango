@@ -382,7 +382,7 @@ func NewCommitService(configService *ConfigService, anthropicService *AnthropicS
 	}
 }
 
-func (cs *CommitService) GenerateCommitMessage(commitType, context string) error {
+func (cs *CommitService) GenerateCommitMessage(commitType, context string, count int) error {
 	config, err := cs.configService.LoadConfig()
 	if err != nil {
 		return err
@@ -404,7 +404,7 @@ func (cs *CommitService) GenerateCommitMessage(commitType, context string) error
 
 	cs.printer.Print(Dim + "⚙️  Analyzing git diff with Claude AI..." + Reset)
 
-	prompt := cs.buildPrompt(files, diff, commitType, context)
+	prompt := cs.buildPrompt(files, diff, commitType, context, count)
 
 	commitMsg, err := cs.anthropicService.GenerateCommitMessage(*config, prompt)
 	if err != nil {
@@ -412,16 +412,30 @@ func (cs *CommitService) GenerateCommitMessage(commitType, context string) error
 	}
 
 	commitMsg = strings.TrimSpace(commitMsg)
-	gitCommand := fmt.Sprintf("git commit -m \"%s\"", commitMsg)
 
-	cs.printer.PrintSuccess("✓ Commit message generated")
-	cs.printer.Print("")
-	cs.printer.Print(Bold + gitCommand + Reset)
+	if count > 1 {
+		// Multiple messages - display them numbered
+		cs.printer.PrintSuccess("✓ Commit message options generated")
+		cs.printer.Print("")
+		messages := strings.Split(commitMsg, "\n")
+		for i, msg := range messages {
+			msg = strings.TrimSpace(msg)
+			if msg != "" {
+				cs.printer.Print(fmt.Sprintf("%s%d.%s %s", Bold, i+1, Reset, msg))
+			}
+		}
+	} else {
+		// Single message - display git command
+		gitCommand := fmt.Sprintf("git commit -m \"%s\"", commitMsg)
+		cs.printer.PrintSuccess("✓ Commit message generated")
+		cs.printer.Print("")
+		cs.printer.Print(Bold + gitCommand + Reset)
+	}
 
 	return nil
 }
 
-func (cs *CommitService) buildPrompt(files, diff, commitType, context string) string {
+func (cs *CommitService) buildPrompt(files, diff, commitType, context string, count int) string {
 	typeInstruction := ""
 	if commitType != "" {
 		typeInstruction = fmt.Sprintf("\nIMPORTANT: The commit type MUST be '%s'.", commitType)
@@ -432,9 +446,16 @@ func (cs *CommitService) buildPrompt(files, diff, commitType, context string) st
 		contextInstruction = fmt.Sprintf("\n\nAdditional context: %s", context)
 	}
 
+	countInstruction := ""
+	outputFormat := "Commit message:"
+	if count > 1 {
+		countInstruction = fmt.Sprintf("\nGenerate %d different commit message options, each on a new line.", count)
+		outputFormat = "Commit messages (one per line):"
+	}
+
 	return fmt.Sprintf(`Generate a conventional commit message based on the following git diff.
 
-IMPORTANT: Return ONLY the commit message, nothing else. No explanations, no analysis, no additional text.%s
+IMPORTANT: Return ONLY the commit message(s), nothing else. No explanations, no analysis, no additional text.%s%s
 
 The message should follow this format: <type>: <description>
 
@@ -457,7 +478,7 @@ Guidelines:
 3. No period at the end
 4. Be concise but descriptive (what was changed and why)
 5. Maximum 50 characters
-6. Return ONLY the commit message, no other text%s
+6. Return ONLY the commit message(s), no other text%s
 
 Here are the files changed:
 %s
@@ -465,7 +486,7 @@ Here are the files changed:
 Here is the git diff:
 %s
 
-Commit message:`, typeInstruction, contextInstruction, files, diff)
+%s`, typeInstruction, countInstruction, contextInstruction, files, diff, outputFormat)
 }
 
 // Utility functions
@@ -524,8 +545,8 @@ func (app *App) HandleHelp() {
 	app.ShowHelp()
 }
 
-func (app *App) HandleCommit(commitType, context string) error {
-	return app.commitService.GenerateCommitMessage(commitType, context)
+func (app *App) HandleCommit(commitType, context string, count int) error {
+	return app.commitService.GenerateCommitMessage(commitType, context, count)
 }
 
 func (app *App) ShowVersion() {
@@ -587,6 +608,7 @@ func (app *App) ShowHelp() {
 	app.printer.Print("  claude_commit commit")
 	app.printer.Print("  claude_commit commit --type feat  # Force commit type")
 	app.printer.Print("  claude_commit commit --context \"fixing authentication bug\"  # Add context")
+	app.printer.Print("  claude_commit commit --count 3  # Generate 3 options")
 	app.printer.Print("  claude_commit commit --type fix --context \"resolves issue #123\"  # Combine flags")
 	app.printer.Print("  claude_commit --version")
 
@@ -627,6 +649,7 @@ func main() {
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
 	commitType := commitCmd.String("type", "", "Commit type (feat, fix, docs, etc.)")
 	commitContext := commitCmd.String("context", "", "Additional context to guide commit message generation")
+	commitCount := commitCmd.Int("count", 1, "Number of commit message options to generate")
 	viewCmd := flag.NewFlagSet("view", flag.ExitOnError)
 	modelsCmd := flag.NewFlagSet("models", flag.ExitOnError)
 	helpCmd := flag.NewFlagSet("help", flag.ExitOnError)
@@ -672,7 +695,7 @@ func main() {
 			app.printer.PrintError(fmt.Sprintf("Error parsing commit arguments: %v", err))
 			os.Exit(1)
 		}
-		err = app.HandleCommit(*commitType, *commitContext)
+		err = app.HandleCommit(*commitType, *commitContext, *commitCount)
 	case "help":
 		err = helpCmd.Parse(os.Args[2:])
 		if err != nil {

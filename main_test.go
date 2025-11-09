@@ -755,7 +755,7 @@ func TestCommitService_GenerateCommitMessage(t *testing.T) {
 			anthropicService := NewAnthropicService(mockHTTP, mockPrinter)
 			commitService := NewCommitService(configService, anthropicService, mockGit, mockPrinter)
 
-			err := commitService.GenerateCommitMessage("", "")
+			err := commitService.GenerateCommitMessage("", "", 1)
 
 			if tt.expectErr {
 				if err == nil {
@@ -968,15 +968,17 @@ func TestCommitService_buildPrompt(t *testing.T) {
 		diff               string
 		commitType         string
 		context            string
+		count              int
 		expectedElements   []string
 		unexpectedElements []string
 	}{
 		{
-			name:       "without type or context specified",
+			name:       "without type or context specified, count 1",
 			files:      "main.go\ntest.go",
 			diff:       "diff --git a/main.go",
 			commitType: "",
 			context:    "",
+			count:      1,
 			expectedElements: []string{
 				"conventional commit message",
 				"<type>: <description>",
@@ -985,10 +987,12 @@ func TestCommitService_buildPrompt(t *testing.T) {
 				"Maximum 50 characters",
 				"main.go\ntest.go",
 				"diff --git a/main.go",
+				"Commit message:",
 			},
 			unexpectedElements: []string{
 				"commit type MUST be",
 				"Additional context:",
+				"different commit message options",
 			},
 		},
 		{
@@ -997,6 +1001,7 @@ func TestCommitService_buildPrompt(t *testing.T) {
 			diff:       "diff --git a/main.go",
 			commitType: "feat",
 			context:    "",
+			count:      1,
 			expectedElements: []string{
 				"conventional commit message",
 				"<type>: <description>",
@@ -1014,6 +1019,7 @@ func TestCommitService_buildPrompt(t *testing.T) {
 			diff:       "diff --git a/api.go",
 			commitType: "fix",
 			context:    "",
+			count:      1,
 			expectedElements: []string{
 				"commit type MUST be 'fix'",
 				"api.go",
@@ -1025,6 +1031,7 @@ func TestCommitService_buildPrompt(t *testing.T) {
 			diff:       "diff --git a/auth.go",
 			commitType: "",
 			context:    "fixing authentication bug",
+			count:      1,
 			expectedElements: []string{
 				"Additional context: fixing authentication bug",
 				"auth.go",
@@ -1039,10 +1046,40 @@ func TestCommitService_buildPrompt(t *testing.T) {
 			diff:       "diff --git a/api.go",
 			commitType: "fix",
 			context:    "resolves issue #123",
+			count:      1,
 			expectedElements: []string{
 				"commit type MUST be 'fix'",
 				"Additional context: resolves issue #123",
 				"api.go",
+			},
+		},
+		{
+			name:       "with count 3",
+			files:      "main.go",
+			diff:       "diff --git a/main.go",
+			commitType: "",
+			context:    "",
+			count:      3,
+			expectedElements: []string{
+				"Generate 3 different commit message options",
+				"each on a new line",
+				"Commit messages (one per line):",
+			},
+			unexpectedElements: []string{
+				"Commit message:",
+			},
+		},
+		{
+			name:       "with count 5 and type",
+			files:      "api.go",
+			diff:       "diff --git a/api.go",
+			commitType: "feat",
+			context:    "",
+			count:      5,
+			expectedElements: []string{
+				"commit type MUST be 'feat'",
+				"Generate 5 different commit message options",
+				"Commit messages (one per line):",
 			},
 		},
 	}
@@ -1050,7 +1087,7 @@ func TestCommitService_buildPrompt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			service := &CommitService{}
-			prompt := service.buildPrompt(tt.files, tt.diff, tt.commitType, tt.context)
+			prompt := service.buildPrompt(tt.files, tt.diff, tt.commitType, tt.context, tt.count)
 
 			for _, element := range tt.expectedElements {
 				if !strings.Contains(prompt, element) {
