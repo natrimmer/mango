@@ -142,7 +142,29 @@ Here is the git diff:
 %s`, typeInstruction, countInstruction, contextInstruction, files, diff, outputFormat)
 }
 
-func runCommit(commitType, context string, count int, dryRun, verbose bool) error {
+// lastMsgPath returns the file where the last chosen message is stashed, so
+// --retry can recommit without another round-trip to the LLM.
+func lastMsgPath() (string, error) {
+	out, err := exec.Command("git", "rev-parse", "--git-dir").Output()
+	if err != nil {
+		return "", fmt.Errorf("not a git repository: %w", err)
+	}
+	return strings.TrimSpace(string(out)) + "/MANGO_COMMIT_MSG", nil
+}
+
+func runCommit(commitType, context string, count int, dryRun, verbose, retry bool) error {
+	if retry {
+		path, err := lastMsgPath()
+		if err != nil {
+			return err
+		}
+		msg, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("no message to retry (run mango commit first): %w", err)
+		}
+		return commitLoop(strings.TrimSpace(string(msg)))
+	}
+
 	cfg, err := loadConfig()
 	if err != nil {
 		return err
@@ -212,7 +234,27 @@ func runCommit(commitType, context string, count int, dryRun, verbose bool) erro
 		printWarning("Aborted — nothing committed")
 		return nil
 	}
-	return runGitCommit(chosen)
+	// Stash the message so `mango commit --retry` can recommit it later without
+	// regenerating (best-effort; failure here shouldn't block the commit).
+	if path, err := lastMsgPath(); err == nil {
+		_ = os.WriteFile(path, []byte(chosen), 0o600)
+	}
+	return commitLoop(chosen)
+}
+
+// commitLoop commits msg, retrying with the same message on failure (e.g. a
+// pre-commit hook), so a hook that edits files or a quick fix doesn't cost
+// another round-trip to the LLM.
+func commitLoop(msg string) error {
+	for {
+		if err := runGitCommit(msg); err == nil {
+			return nil
+		}
+		if !yes(promptLine("Commit failed. Retry with the same message? [Y/n] ")) {
+			printWarning("Aborted — nothing committed")
+			return nil
+		}
+	}
 }
 
 func printCommands(messages []string) {
@@ -299,10 +341,11 @@ var commitCmd = &cobra.Command{
 		count, _ := cmd.Flags().GetInt("count")
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		verbose, _ := cmd.Flags().GetBool("verbose")
+		retry, _ := cmd.Flags().GetBool("retry")
 		if commitType != "" && !slices.Contains(conventionalTypes, commitType) {
 			return fmt.Errorf("invalid type %q. Valid types: %s", commitType, strings.Join(conventionalTypes, ", "))
 		}
-		return runCommit(commitType, context, count, dryRun, verbose)
+		return runCommit(commitType, context, count, dryRun, verbose, retry)
 	},
 }
 
@@ -312,5 +355,6 @@ func init() {
 	commitCmd.Flags().IntP("count", "n", 1, "Number of commit message options to generate")
 	commitCmd.Flags().Bool("dry-run", false, "Show prompt without calling the API")
 	commitCmd.Flags().BoolP("verbose", "v", false, "Show prompt and full API interaction")
+	commitCmd.Flags().Bool("retry", false, "Recommit the last generated message without calling the API")
 	rootCmd.AddCommand(commitCmd)
 }
