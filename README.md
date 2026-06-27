@@ -36,26 +36,26 @@ git clone https://github.com/natrimmer/mango.git && cd mango && go build
 ## Use
 
 ```bash
-mango config --api-key "sk-ant-..."   # one-time setup
+mango config set --api-key "sk-ant-..."   # one-time setup
 git add .
-mango commit                          # prints a ready-to-run git commit command
+mango commit                              # prints a ready-to-run git commit command
 ```
 
 `mango commit` flags:
 
 | Flag | What it does |
 |------|--------------|
-| `--type <t>` | Force a commit type (`feat`, `fix`, `docs`, …) |
-| `--context "<text>"` | Extra context to guide the message (e.g. `"resolves #123"`) |
-| `--count <n>` | Offer N options to pick from instead of one |
+| `--type`, `-t <t>` | Force a commit type (`feat`, `fix`, `docs`, …) |
+| `--context`, `-c "<text>"` | Extra context to guide the message (e.g. `"resolves #123"`) |
+| `--count`, `-n <n>` | Offer N options to pick from instead of one |
 | `--dry-run` | Show the prompt without calling the API |
-| `--verbose`, `-v` | Show the full prompt and raw API response |
+| `--verbose`, `-v` | Show the prompt (as `--dry-run` does) plus the raw API response |
 
-Other commands: `mango view` (show config), `mango models` (list models), `mango --version`.
+Other commands: `mango config show` (show config), `mango config models` (list models), `mango --version`.
 
 ## Models
 
-Set with `mango config --model <name>`:
+Set with `mango config set --model <name>`:
 
 - `claude-opus-4-8` — most capable, slower, pricier
 - `claude-sonnet-4-6` — **default**, balanced

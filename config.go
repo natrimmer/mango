@@ -39,7 +39,7 @@ func loadConfig() (*Config, error) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("error reading config file: %w\nPlease run 'config' first", err)
+		return nil, fmt.Errorf("error reading config file: %w\nRun: mango config set --api-key \"sk-ant-...\"", err)
 	}
 	var cfg Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
@@ -65,7 +65,7 @@ func saveConfig(apiKey, model string) error {
 		return fmt.Errorf("API key is required. Use --api-key flag to set it")
 	}
 	if !slices.Contains(availableModels, cfg.Model) {
-		return fmt.Errorf("invalid model %q. Run 'models' to see available models", cfg.Model)
+		return fmt.Errorf("invalid model %q. Run 'mango config models' to see available models", cfg.Model)
 	}
 
 	path, err := configPath()
@@ -97,9 +97,16 @@ func maskAPIKey(k string) string {
 	return k[:4] + "****" + k[len(k)-4:]
 }
 
+// configCmd is a parent grouping setup under one noun; bare `mango config`
+// prints help listing the subcommands.
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Configure API key and model",
+	Short: "Manage API key and model",
+}
+
+var configSetCmd = &cobra.Command{
+	Use:   "set",
+	Short: "Set API key and/or model",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiKey, _ := cmd.Flags().GetString("api-key")
 		model, _ := cmd.Flags().GetString("model")
@@ -110,9 +117,9 @@ var configCmd = &cobra.Command{
 	},
 }
 
-var viewCmd = &cobra.Command{
-	Use:   "view",
-	Short: "View current configuration",
+var configShowCmd = &cobra.Command{
+	Use:   "show",
+	Short: "Show current configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := loadConfig()
 		if err != nil {
@@ -125,18 +132,20 @@ var viewCmd = &cobra.Command{
 	},
 }
 
-var modelsCmd = &cobra.Command{
+var configModelsCmd = &cobra.Command{
 	Use:   "models",
 	Short: "List available models",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := loadConfig()
-		if err != nil {
-			return err
+		// Config is optional here — listing static models needs no API key.
+		// If it loads, mark the active one.
+		current := ""
+		if cfg, err := loadConfig(); err == nil {
+			current = cfg.Model
 		}
 		fmt.Println(Bold + Cyan + "Available Models:" + Reset)
 		for _, m := range availableModels {
 			switch m {
-			case cfg.Model:
+			case current:
 				fmt.Println(Bold + Green + m + " [CURRENT]" + Reset)
 			case defaultModel:
 				fmt.Println(Bold + m + " [DEFAULT]" + Reset)
@@ -149,7 +158,8 @@ var modelsCmd = &cobra.Command{
 }
 
 func init() {
-	configCmd.Flags().String("api-key", "", "API key for the model provider")
-	configCmd.Flags().String("model", "", "Model to use")
-	rootCmd.AddCommand(configCmd, viewCmd, modelsCmd)
+	configSetCmd.Flags().String("api-key", "", "API key for the model provider")
+	configSetCmd.Flags().String("model", "", "Model to use")
+	configCmd.AddCommand(configSetCmd, configShowCmd, configModelsCmd)
+	rootCmd.AddCommand(configCmd)
 }

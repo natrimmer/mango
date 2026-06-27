@@ -7,12 +7,19 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const divider = "─────────────────────────────────────────"
+
+// conventionalTypes are the valid commit types accepted by --type.
+var conventionalTypes = []string{
+	"feat", "fix", "docs", "style", "refactor",
+	"perf", "test", "chore", "ci", "build", "revert",
+}
 
 // apiURL is a var so tests can point it at a stub server.
 var apiURL = "https://api.anthropic.com/v1/messages"
@@ -183,9 +190,11 @@ func runCommit(commitType, context string, count int, dryRun, verbose bool) erro
 	if count > 1 {
 		printSuccess("Commit message options generated")
 		fmt.Println()
-		for i, line := range strings.Split(msg, "\n") {
+		n := 0
+		for line := range strings.SplitSeq(msg, "\n") {
 			if line = strings.TrimSpace(line); line != "" {
-				fmt.Printf("%s%d.%s %s\n", Bold, i+1, Reset, line)
+				n++
+				fmt.Printf("%s%d.%s %s\n", Bold, n, Reset, fmt.Sprintf("git commit -m %q", line))
 			}
 		}
 	} else {
@@ -205,14 +214,17 @@ var commitCmd = &cobra.Command{
 		count, _ := cmd.Flags().GetInt("count")
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		verbose, _ := cmd.Flags().GetBool("verbose")
+		if commitType != "" && !slices.Contains(conventionalTypes, commitType) {
+			return fmt.Errorf("invalid type %q. Valid types: %s", commitType, strings.Join(conventionalTypes, ", "))
+		}
 		return runCommit(commitType, context, count, dryRun, verbose)
 	},
 }
 
 func init() {
-	commitCmd.Flags().String("type", "", "Commit type (feat, fix, docs, etc.)")
-	commitCmd.Flags().String("context", "", "Additional context to guide generation")
-	commitCmd.Flags().Int("count", 1, "Number of commit message options to generate")
+	commitCmd.Flags().StringP("type", "t", "", "Commit type (feat, fix, docs, etc.)")
+	commitCmd.Flags().StringP("context", "c", "", "Additional context to guide generation")
+	commitCmd.Flags().IntP("count", "n", 1, "Number of commit message options to generate")
 	commitCmd.Flags().Bool("dry-run", false, "Show prompt without calling the API")
 	commitCmd.Flags().BoolP("verbose", "v", false, "Show prompt and full API interaction")
 	rootCmd.AddCommand(commitCmd)
