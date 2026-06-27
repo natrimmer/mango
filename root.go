@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
@@ -16,6 +17,17 @@ var (
 	buildDate = "unknown"
 	commitSHA = "unknown"
 )
+
+// When installed via `go install ...@version`, ldflags aren't applied, so fall
+// back to the module version the Go toolchain embeds.
+func init() {
+	if version != "v0.0.0-dev" {
+		return
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		version = info.Main.Version
+	}
+}
 
 var rootCmd = &cobra.Command{
 	Use:           "mango",
