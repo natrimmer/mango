@@ -72,11 +72,11 @@ claude_commit --version    # Show version info
 ### Configuration
 
 ```bash
-# Configure with your API key (uses claude-3-7-sonnet-latest by default)
+# Configure with your API key (uses claude-sonnet-4-6 by default)
 claude_commit config -api-key "your-api-key"
 
 # Configure with specific model
-claude_commit config -api-key "your-api-key" -model "claude-3-5-sonnet-latest"
+claude_commit config -api-key "your-api-key" -model "claude-opus-4-8"
 
 # View current configuration
 claude_commit view
@@ -103,36 +103,30 @@ claude_commit commit --type fix --context "auth issue" --count 2  # Combine flag
 
 ## Available Models
 
-- `claude-opus-4-0` - Most capable, slower and more expensive
-- `claude-sonnet-4-0` - Balanced performance and speed
-- `claude-3-7-sonnet-latest` - **Default** - Fast and efficient
-- `claude-3-5-sonnet-latest` - Previous generation, reliable
-- `claude-3-5-haiku-latest` - Fastest and most cost-effective
-- `claude-3-opus-latest` - Previous generation, most capable
+- `claude-opus-4-8` - Most capable, slower and more expensive
+- `claude-sonnet-4-6` - **Default** - Balanced performance and speed
+- `claude-haiku-4-5` - Fastest and most cost-effective
 
 ## Example Usage
 
 ### Configuration
 
 ```bash
-$ claude_commit config -api-key "sk-ant-api03-..." -model "claude-3-7-sonnet-latest"
+$ claude_commit config -api-key "sk-ant-api03-..." -model "claude-sonnet-4-6"
 Configuration saved successfully
 API Key: sk-a****...
-Model: claude-3-7-sonnet-latest
+Model: claude-sonnet-4-6
 
 $ claude_commit view
 Current Configuration:
 API Key: sk-a****...
-Model: claude-3-7-sonnet-latest
+Model: claude-sonnet-4-6
 
 $ claude_commit models
 Available Models:
-claude-opus-4-0
-claude-sonnet-4-0
-claude-3-7-sonnet-latest [CURRENT]
-claude-3-5-sonnet-latest
-claude-3-5-haiku-latest
-claude-3-opus-latest
+claude-opus-4-8
+claude-sonnet-4-6 [CURRENT]
+claude-haiku-4-5
 ```
 
 ### Generating Commits

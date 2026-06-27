@@ -23,12 +23,12 @@ func TestService_ShowModels(t *testing.T) {
 		},
 		{
 			name:         "non-default model selected",
-			currentModel: "claude-opus-4-0",
+			currentModel: "claude-opus-4-8",
 			expectErr:    false,
 		},
 		{
 			name:         "haiku model selected",
-			currentModel: "claude-3-5-haiku-latest",
+			currentModel: "claude-haiku-4-5",
 			expectErr:    false,
 		},
 	}
@@ -107,12 +107,9 @@ func TestConstants(t *testing.T) {
 
 	// Test that available models list has expected models
 	expectedModels := []string{
-		"claude-opus-4-0",
-		"claude-sonnet-4-0",
-		"claude-3-7-sonnet-latest",
-		"claude-3-5-sonnet-latest",
-		"claude-3-5-haiku-latest",
-		"claude-3-opus-latest",
+		"claude-opus-4-8",
+		"claude-sonnet-4-6",
+		"claude-haiku-4-5",
 	}
 
 	if len(AvailableModels) != len(expectedModels) {

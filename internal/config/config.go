@@ -16,7 +16,7 @@ type Config struct {
 }
 
 // DefaultModel is the default Claude model to use
-const DefaultModel = "claude-3-7-sonnet-latest"
+const DefaultModel = "claude-sonnet-4-6"
 
 // Service handles configuration operations
 type Service struct {
