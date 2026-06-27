@@ -51,7 +51,7 @@ claude_commit --help
 claude_commit --version
 
 # Configure
-claude_commit config -api-key "your-api-key"
+claude_commit config --api-key "your-api-key"
 
 # Generate commit message
 git add .
@@ -73,10 +73,10 @@ claude_commit --version    # Show version info
 
 ```bash
 # Configure with your API key (uses claude-sonnet-4-6 by default)
-claude_commit config -api-key "your-api-key"
+claude_commit config --api-key "your-api-key"
 
 # Configure with specific model
-claude_commit config -api-key "your-api-key" -model "claude-opus-4-8"
+claude_commit config --api-key "your-api-key" --model "claude-opus-4-8"
 
 # View current configuration
 claude_commit view
@@ -112,7 +112,7 @@ claude_commit commit --type fix --context "auth issue" --count 2  # Combine flag
 ### Configuration
 
 ```bash
-$ claude_commit config -api-key "sk-ant-api03-..." -model "claude-sonnet-4-6"
+$ claude_commit config --api-key "sk-ant-api03-..." --model "claude-sonnet-4-6"
 Configuration saved successfully
 API Key: sk-a****...
 Model: claude-sonnet-4-6
@@ -324,7 +324,7 @@ Your configuration is stored in a JSON file at `~/.claude-commit/config.json`. T
 
 ## Features
 
-- Zero dependencies
+- Built on [Cobra](https://github.com/spf13/cobra) for CLI ergonomics
 - Follows conventional commit best practices
 - Uses conventional commit format
 - Configuration stored in `~/.claude-commit/config.json`
@@ -346,27 +346,19 @@ Your configuration is stored in a JSON file at `~/.claude-commit/config.json`. T
 
 ### Architecture
 
-The codebase follows a clean architecture pattern with clear separation of concerns:
+A flat `package main` built on [Cobra](https://github.com/spf13/cobra). One file per concern, no internal packages:
 
 ```
-internal/
-├── ui/           # Console output, colors, and printer interface
-├── filesystem/   # File system abstraction for testability
-├── git/          # Git client for diff and staged file operations
-├── config/       # Configuration management and persistence
-├── model/        # Model listing and management
-├── anthropic/    # Anthropic API client
-├── commit/       # Commit message generation logic
-└── app/          # Application orchestration and CLI handlers
+main.go      # entrypoint -> Execute()
+root.go      # root command, version, Execute()
+config.go    # Config load/save, model validation, config/view/models commands
+commit.go    # prompt building, Anthropic call, git helpers, commit command
+colors.go    # ANSI codes and print helpers
 ```
 
-**Key Design Principles:**
-- **Dependency Injection**: All dependencies are injected via interfaces
-- **Testability**: Each package has comprehensive tests with mock implementations
-- **Single Responsibility**: Each package has one clear purpose
-- **Interface Segregation**: Small, focused interfaces for easy mocking
-
-Each package exports mock implementations (in `mock.go`) for cross-package testing, making it easy to write isolated unit tests.
+Cobra handles command routing, flag parsing, and help/usage generation. Logic
+talks to `os`, `os/exec`, and `net/http` directly — tests exercise real behavior
+(temp `HOME` for config, `httptest` for the API) rather than mocks.
 
 ### Building from Source
 
