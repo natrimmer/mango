@@ -35,7 +35,7 @@ func Execute() {
 }
 
 func versionString() string {
-	s := Bold + Magenta + "Mango" + Reset + " " + Dim + version + Reset + "\n"
+	s := Bold + Magenta + "mango" + Reset + " " + Dim + version + Reset + "\n"
 	if version != "v0.0.0-dev" {
 		s += Dim + "Build Date: " + buildDate + Reset + "\n"
 		s += Dim + "Commit: " + commitSHA + Reset + "\n"
