@@ -24,8 +24,23 @@ func init() {
 	if version != "v0.0.0-dev" {
 		return
 	}
-	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+	if info.Main.Version != "" && info.Main.Version != "(devel)" {
 		version = info.Main.Version
+	}
+	for _, s := range info.Settings {
+		switch s.Key {
+		case "vcs.time":
+			buildDate = s.Value
+		case "vcs.revision":
+			commitSHA = s.Value
+			if len(commitSHA) > 7 { // match the short SHA the release ldflags use
+				commitSHA = commitSHA[:7]
+			}
+		}
 	}
 }
 
@@ -47,9 +62,12 @@ func Execute() {
 }
 
 func versionString() string {
-	s := Bold + Magenta + "mango" + Reset + " " + Dim + version + Reset + "\n"
-	if version != "v0.0.0-dev" {
+	s := Bold + Magenta + "🥭 mango" + Reset + " " + Dim + version + Reset + "\n"
+	// Only shown when known — go install builds have no commit/date to embed.
+	if buildDate != "unknown" {
 		s += Dim + "Build Date: " + buildDate + Reset + "\n"
+	}
+	if commitSHA != "unknown" {
 		s += Dim + "Commit: " + commitSHA + Reset + "\n"
 	}
 	return s + Dim + tagline + Reset + "\n"
