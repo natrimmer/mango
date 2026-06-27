@@ -5,7 +5,8 @@ Generate conventional commit messages from your staged changes, using AI.
 ```bash
 git add .
 mango commit
-# git commit -m "feat: add user authentication and password reset"
+# feat: add user authentication and password reset
+# Commit with this message? [Y/n]  → commits for you
 ```
 
 ## Install
@@ -38,8 +39,10 @@ git clone https://github.com/natrimmer/mango.git && cd mango && go build
 ```bash
 mango config set --api-key "sk-ant-..."   # one-time setup
 git add .
-mango commit                              # prints a ready-to-run git commit command
+mango commit                              # shows the message, then commits on confirm
 ```
+
+On a terminal, `mango commit` prompts and runs `git commit` for you (with `--count`, pick an option by number). When output is piped or in CI, it instead prints a ready-to-run `git commit` command and commits nothing.
 
 `mango commit` flags:
 

@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -187,22 +190,104 @@ func runCommit(commitType, context string, count int, dryRun, verbose bool) erro
 		fmt.Println()
 	}
 
+	var messages []string
 	if count > 1 {
-		printSuccess("Commit message options generated")
-		fmt.Println()
-		n := 0
 		for line := range strings.SplitSeq(msg, "\n") {
 			if line = strings.TrimSpace(line); line != "" {
-				n++
-				fmt.Printf("%s%d.%s %s\n", Bold, n, Reset, fmt.Sprintf("git commit -m %q", line))
+				messages = append(messages, line)
 			}
 		}
 	} else {
+		messages = []string{msg}
+	}
+
+	// Piped/CI: no TTY to prompt on, so print runnable commands (old behavior).
+	if !isInteractive() {
+		printCommands(messages)
+		return nil
+	}
+
+	chosen := selectMessage(messages)
+	if chosen == "" {
+		printWarning("Aborted — nothing committed")
+		return nil
+	}
+	return runGitCommit(chosen)
+}
+
+func printCommands(messages []string) {
+	if len(messages) > 1 {
+		printSuccess("Commit message options generated")
+	} else {
 		printSuccess("Commit message generated")
+	}
+	fmt.Println()
+	for i, m := range messages {
+		if len(messages) > 1 {
+			fmt.Printf("%s%d.%s %s\n", Bold, i+1, Reset, fmt.Sprintf("git commit -m %q", m))
+		} else {
+			fmt.Println(Bold + fmt.Sprintf("git commit -m %q", m) + Reset)
+		}
+	}
+}
+
+// selectMessage shows the message(s) and returns the one to commit, or "" to abort.
+func selectMessage(messages []string) string {
+	fmt.Println()
+	if len(messages) == 1 {
+		fmt.Println(Bold + messages[0] + Reset)
 		fmt.Println()
-		fmt.Println(Bold + fmt.Sprintf("git commit -m %q", msg) + Reset)
+		if yes(promptLine("Commit with this message? [Y/n] ")) {
+			return messages[0]
+		}
+		return ""
+	}
+	for i, m := range messages {
+		fmt.Printf("%s%d.%s %s\n", Bold, i+1, Reset, m)
+	}
+	fmt.Println()
+	if n := parseSelection(promptLine(fmt.Sprintf("Select [1-%d] to commit, or Enter to skip: ", len(messages))), len(messages)); n > 0 {
+		return messages[n-1]
+	}
+	return ""
+}
+
+func runGitCommit(msg string) error {
+	cmd := exec.Command("git", "commit", "-m", msg)
+	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("git commit failed: %w", err)
 	}
 	return nil
+}
+
+// isInteractive reports whether stdin is a terminal we can prompt on.
+func isInteractive() bool {
+	fi, err := os.Stdin.Stat()
+	return err == nil && fi.Mode()&os.ModeCharDevice != 0
+}
+
+func promptLine(prompt string) string {
+	fmt.Print(Bold + prompt + Reset)
+	sc := bufio.NewScanner(os.Stdin)
+	if sc.Scan() {
+		return sc.Text()
+	}
+	return ""
+}
+
+func yes(s string) bool {
+	s = strings.ToLower(strings.TrimSpace(s))
+	return s == "" || s == "y" || s == "yes"
+}
+
+// parseSelection returns a 1-based choice in [1,max], or -1 if invalid.
+func parseSelection(in string, max int) int {
+	n, err := strconv.Atoi(strings.TrimSpace(in))
+	if err != nil || n < 1 || n > max {
+		return -1
+	}
+	return n
 }
 
 var commitCmd = &cobra.Command{

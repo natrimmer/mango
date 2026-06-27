@@ -28,6 +28,34 @@ func TestBuildPrompt(t *testing.T) {
 	}
 }
 
+func TestParseSelection(t *testing.T) {
+	cases := []struct {
+		in        string
+		max, want int
+	}{
+		{"1", 3, 1}, {"3", 3, 3}, {" 2 ", 3, 2},
+		{"0", 3, -1}, {"4", 3, -1}, {"", 3, -1}, {"x", 3, -1},
+	}
+	for _, c := range cases {
+		if got := parseSelection(c.in, c.max); got != c.want {
+			t.Errorf("parseSelection(%q, %d) = %d, want %d", c.in, c.max, got, c.want)
+		}
+	}
+}
+
+func TestYes(t *testing.T) {
+	for _, s := range []string{"", "y", "Y", "yes", " Yes "} {
+		if !yes(s) {
+			t.Errorf("yes(%q) should be true", s)
+		}
+	}
+	for _, s := range []string{"n", "no", "x"} {
+		if yes(s) {
+			t.Errorf("yes(%q) should be false", s)
+		}
+	}
+}
+
 func TestGenerateCommitMessage(t *testing.T) {
 	tests := []struct {
 		name    string
