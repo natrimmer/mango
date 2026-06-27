@@ -100,6 +100,16 @@
         [yY]|[yY][eE][sS])
           git tag "$NEW" && git push origin "$NEW"
           echo "Pushed $NEW"
+          # Prime the Go proxy so `go install @latest` sees $NEW right away
+          # instead of waiting for the proxy to index it lazily. Best-effort:
+          # 5 tries over ~10s; if it never lands, @latest self-heals.
+          MOD=$(go list -m)
+          for i in 1 2 3 4 5; do
+            if curl -sf "https://proxy.golang.org/$MOD/@v/$NEW.info" >/dev/null; then
+              echo "Primed Go proxy for $NEW"; break
+            fi
+            sleep 2
+          done
           ;;
         *) echo "Cancelled." ;;
       esac
