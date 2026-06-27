@@ -25,13 +25,13 @@ func TestApp_HandleConfig(t *testing.T) {
 		{
 			name:      "successful config with both parameters",
 			apiKey:    "test-api-key",
-			model:     "test-model",
+			model:     "claude-sonnet-4-6",
 			expectErr: false,
 		},
 		{
 			name:           "update only model with existing config",
 			apiKey:         "",
-			model:          "new-model",
+			model:          "claude-haiku-4-5",
 			existingConfig: true,
 			expectErr:      false,
 		},

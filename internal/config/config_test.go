@@ -109,15 +109,25 @@ func TestService_SaveConfig(t *testing.T) {
 		{
 			name:   "successful save with both parameters",
 			apiKey: "test-api-key",
-			model:  "test-model",
+			model:  "claude-sonnet-4-6",
 			setupMock: func(fs *filesystem.MockFileSystem) {
 				fs.SetHomeDir("/tmp")
 			},
 			expectError: false,
 			expectedConfig: &Config{
 				ApiKey: "test-api-key",
-				Model:  "test-model",
+				Model:  "claude-sonnet-4-6",
 			},
+		},
+		{
+			name:   "invalid model rejected",
+			apiKey: "test-api-key",
+			model:  "not-a-real-model",
+			setupMock: func(fs *filesystem.MockFileSystem) {
+				fs.SetHomeDir("/tmp")
+			},
+			expectError: true,
+			errorMsg:    "invalid model",
 		},
 		{
 			name:   "update only API key",
@@ -125,38 +135,38 @@ func TestService_SaveConfig(t *testing.T) {
 			model:  "",
 			existingConfig: &Config{
 				ApiKey: "old-api-key",
-				Model:  "existing-model",
+				Model:  "claude-opus-4-8",
 			},
 			setupMock: func(fs *filesystem.MockFileSystem) {
 				fs.SetHomeDir("/tmp")
-				config := Config{ApiKey: "old-api-key", Model: "existing-model"}
+				config := Config{ApiKey: "old-api-key", Model: "claude-opus-4-8"}
 				configJSON, _ := json.Marshal(config)
 				fs.SetReadData(configJSON)
 			},
 			expectError: false,
 			expectedConfig: &Config{
 				ApiKey: "new-api-key",
-				Model:  "existing-model",
+				Model:  "claude-opus-4-8",
 			},
 		},
 		{
 			name:   "update only model",
 			apiKey: "",
-			model:  "new-model",
+			model:  "claude-haiku-4-5",
 			existingConfig: &Config{
 				ApiKey: "existing-api-key",
-				Model:  "old-model",
+				Model:  "claude-opus-4-8",
 			},
 			setupMock: func(fs *filesystem.MockFileSystem) {
 				fs.SetHomeDir("/tmp")
-				config := Config{ApiKey: "existing-api-key", Model: "old-model"}
+				config := Config{ApiKey: "existing-api-key", Model: "claude-opus-4-8"}
 				configJSON, _ := json.Marshal(config)
 				fs.SetReadData(configJSON)
 			},
 			expectError: false,
 			expectedConfig: &Config{
 				ApiKey: "existing-api-key",
-				Model:  "new-model",
+				Model:  "claude-haiku-4-5",
 			},
 		},
 		{
@@ -173,7 +183,7 @@ func TestService_SaveConfig(t *testing.T) {
 		{
 			name:   "home directory error",
 			apiKey: "test-api-key",
-			model:  "test-model",
+			model:  "claude-sonnet-4-6",
 			setupMock: func(fs *filesystem.MockFileSystem) {
 				fs.SetHomeError(errors.New("home dir error"))
 			},
@@ -183,7 +193,7 @@ func TestService_SaveConfig(t *testing.T) {
 		{
 			name:   "mkdir error",
 			apiKey: "test-api-key",
-			model:  "test-model",
+			model:  "claude-sonnet-4-6",
 			setupMock: func(fs *filesystem.MockFileSystem) {
 				fs.SetHomeDir("/tmp")
 				fs.SetMkdirError(errors.New("mkdir error"))
@@ -194,7 +204,7 @@ func TestService_SaveConfig(t *testing.T) {
 		{
 			name:   "write file error",
 			apiKey: "test-api-key",
-			model:  "test-model",
+			model:  "claude-sonnet-4-6",
 			setupMock: func(fs *filesystem.MockFileSystem) {
 				fs.SetHomeDir("/tmp")
 				fs.SetWriteError(errors.New("write error"))

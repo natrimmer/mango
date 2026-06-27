@@ -5,12 +5,8 @@ import (
 	"github.com/natrimmer/claude_commit/internal/ui"
 )
 
-// AvailableModels lists all supported Claude models
-var AvailableModels = []string{
-	"claude-opus-4-8",
-	"claude-sonnet-4-6",
-	"claude-haiku-4-5",
-}
+// AvailableModels lists all supported Claude models (defined in config)
+var AvailableModels = config.AvailableModels
 
 // Service handles model-related operations
 type Service struct {

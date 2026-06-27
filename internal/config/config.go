@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"slices"
 
 	"github.com/natrimmer/claude_commit/internal/filesystem"
 	"github.com/natrimmer/claude_commit/internal/ui"
@@ -17,6 +18,13 @@ type Config struct {
 
 // DefaultModel is the default Claude model to use
 const DefaultModel = "claude-sonnet-4-6"
+
+// AvailableModels lists all supported Claude models
+var AvailableModels = []string{
+	"claude-opus-4-8",
+	"claude-sonnet-4-6",
+	"claude-haiku-4-5",
+}
 
 // Service handles configuration operations
 type Service struct {
@@ -56,6 +64,10 @@ func (cs *Service) SaveConfig(apiKey, model string) error {
 	// Validate that we have an API key (either from existing config or new input)
 	if config.ApiKey == "" {
 		return fmt.Errorf("API key is required. Use -api-key flag to set it")
+	}
+
+	if !isValidModel(config.Model) {
+		return fmt.Errorf("invalid model %q. Run 'models' to see available models", config.Model)
 	}
 
 	homeDir, err := cs.fs.UserHomeDir()
@@ -121,6 +133,11 @@ func (cs *Service) ViewConfig() error {
 	cs.printer.Print(ui.Bold + "Model: " + ui.Reset + config.Model)
 
 	return nil
+}
+
+// isValidModel reports whether model is in AvailableModels
+func isValidModel(model string) bool {
+	return slices.Contains(AvailableModels, model)
 }
 
 // MaskAPIKey masks an API key for display
