@@ -29,7 +29,7 @@ func configPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error getting home directory: %w", err)
 	}
-	return filepath.Join(home, ".claude-commit", "config.json"), nil
+	return filepath.Join(home, ".mango", "config.json"), nil
 }
 
 func loadConfig() (*Config, error) {

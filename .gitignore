@@ -15,10 +15,10 @@
 coverage.html
 
 # Built binary
-claude_commit
+mango
 
 # Config files
-.claude-commit/
+.mango/
 
 # Devenv
 .devenv*

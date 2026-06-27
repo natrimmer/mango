@@ -7,7 +7,7 @@
   #----------------------------------------------------------------------------
   # Basic Environment Setup
   #----------------------------------------------------------------------------
-  env.GREET = "Claude Commit";
+  env.GREET = "Mango";
 
   #----------------------------------------------------------------------------
   # Languages and Packages
@@ -34,8 +34,8 @@
       BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
       COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
-      echo "Building Claude Commit $VERSION"
-      go build -ldflags "-X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA" -o claude_commit .
+      echo "Building Mango $VERSION"
+      go build -ldflags "-X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA" -o mango .
     '';
 
     build-release.exec = ''
@@ -43,8 +43,8 @@
       BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
       COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
-      echo "Building Claude Commit $VERSION (release)"
-      CGO_ENABLED=0 go build -ldflags "-w -s -X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA" -o claude_commit .
+      echo "Building Mango $VERSION (release)"
+      CGO_ENABLED=0 go build -ldflags "-w -s -X main.version=$VERSION -X main.buildDate=$BUILD_DATE -X main.commitSHA=$COMMIT_SHA" -o mango .
     '';
 
     version.exec = ''
@@ -88,7 +88,7 @@
     '';
 
     clean.exec = ''
-      rm -f claude_commit
+      rm -f mango
       rm -f coverage.out coverage.html
       go clean -testcache
     '';
@@ -105,8 +105,8 @@
     test-binary.exec = ''
       ./build
       echo "Testing built binary:"
-      ./claude_commit --version
-      ./claude_commit --help
+      ./mango --version
+      ./mango --help
     '';
 
     major.exec = ''

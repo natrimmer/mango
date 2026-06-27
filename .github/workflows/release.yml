@@ -49,19 +49,19 @@ jobs:
         include:
           - os: linux
             arch: amd64
-            artifact_name: claude_commit_linux_amd64
+            artifact_name: mango_linux_amd64
           - os: linux
             arch: arm64
-            artifact_name: claude_commit_linux_arm64
+            artifact_name: mango_linux_arm64
           - os: darwin
             arch: amd64
-            artifact_name: claude_commit_darwin_amd64
+            artifact_name: mango_darwin_amd64
           - os: darwin
             arch: arm64
-            artifact_name: claude_commit_darwin_arm64
+            artifact_name: mango_darwin_arm64
           - os: windows
             arch: amd64
-            artifact_name: claude_commit_windows_amd64.exe
+            artifact_name: mango_windows_amd64.exe
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

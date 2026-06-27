@@ -14,7 +14,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "claude_commit",
+	Use:           "mango",
 	Short:         "Generate conventional commit messages with Anthropic's Claude",
 	Version:       version,
 	SilenceUsage:  true,
@@ -31,7 +31,7 @@ func Execute() {
 }
 
 func versionString() string {
-	s := Bold + Magenta + "Claude Commit" + Reset + " " + Dim + version + Reset + "\n"
+	s := Bold + Magenta + "Mango" + Reset + " " + Dim + version + Reset + "\n"
 	if version != "v0.0.0-dev" {
 		s += Dim + "Build Date: " + buildDate + Reset + "\n"
 		s += Dim + "Commit: " + commitSHA + Reset + "\n"

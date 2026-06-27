@@ -1,4 +1,4 @@
-# Claude Commit
+# Mango
 
 A simple CLI tool that uses the Claude API to generate Git commit messages from staged changes, following conventional commit best practices.
 
@@ -6,36 +6,36 @@ A simple CLI tool that uses the Claude API to generate Git commit messages from 
 
 ### Option 1: Download binary
 
-Download the pre-built binary for your platform from the [GitHub Releases page](https://github.com/natrimmer/claude_commit/releases/latest):
+Download the pre-built binary for your platform from the [GitHub Releases page](https://github.com/natrimmer/mango/releases/latest):
 
 ```bash
 # Example for Linux (amd64)
-curl -L https://github.com/natrimmer/claude_commit/releases/latest/download/claude_commit_linux_amd64 -o claude_commit
-chmod +x claude_commit
-sudo mv claude_commit /usr/local/bin/
+curl -L https://github.com/natrimmer/mango/releases/latest/download/mango_linux_amd64 -o mango
+chmod +x mango
+sudo mv mango /usr/local/bin/
 
 # Example for macOS (intel)
-curl -L https://github.com/natrimmer/claude_commit/releases/latest/download/claude_commit_darwin_amd64 -o claude_commit
-chmod +x claude_commit
-sudo mv claude_commit /usr/local/bin/
+curl -L https://github.com/natrimmer/mango/releases/latest/download/mango_darwin_amd64 -o mango
+chmod +x mango
+sudo mv mango /usr/local/bin/
 
 # Example for macOS (Apple Silicon)
-curl -L https://github.com/natrimmer/claude_commit/releases/latest/download/claude_commit_darwin_arm64 -o claude_commit
-chmod +x claude_commit
-sudo mv claude_commit /usr/local/bin/
+curl -L https://github.com/natrimmer/mango/releases/latest/download/mango_darwin_arm64 -o mango
+chmod +x mango
+sudo mv mango /usr/local/bin/
 ```
 
 ### Option 2: Using Go
 
 ```bash
-go install github.com/natrimmer/claude_commit@latest
+go install github.com/natrimmer/mango@latest
 ```
 
 ### Option 3: Build from source
 
 ```bash
-git clone https://github.com/natrimmer/claude_commit.git
-cd claude_commit
+git clone https://github.com/natrimmer/mango.git
+cd mango
 build  # or: go build
 ```
 
@@ -43,19 +43,19 @@ build  # or: go build
 
 ```bash
 # Get help
-claude_commit
+mango
 # or
-claude_commit --help
+mango --help
 
 # Check version
-claude_commit --version
+mango --version
 
 # Configure
-claude_commit config --api-key "your-api-key"
+mango config --api-key "your-api-key"
 
 # Generate commit message
 git add .
-claude_commit commit
+mango commit
 ```
 
 ## Commands
@@ -63,42 +63,42 @@ claude_commit commit
 ### Help and Version
 
 ```bash
-claude_commit              # Show help
-claude_commit --help       # Show help
-claude_commit help         # Show help
-claude_commit --version    # Show version info
+mango              # Show help
+mango --help       # Show help
+mango help         # Show help
+mango --version    # Show version info
 ```
 
 ### Configuration
 
 ```bash
 # Configure with your API key (uses claude-sonnet-4-6 by default)
-claude_commit config --api-key "your-api-key"
+mango config --api-key "your-api-key"
 
 # Configure with specific model
-claude_commit config --api-key "your-api-key" --model "claude-opus-4-8"
+mango config --api-key "your-api-key" --model "claude-opus-4-8"
 
 # View current configuration
-claude_commit view
+mango view
 
 # List available models
-claude_commit models
+mango models
 ```
 
 ### Generate Commit Messages
 
 ```bash
 git add .                # Stage your changes
-claude_commit commit     # Generate a commit message
+mango commit     # Generate a commit message
 
 # Advanced options
-claude_commit commit --type feat                    # Force specific commit type
-claude_commit commit --context "fixing bug #123"    # Provide additional context
-claude_commit commit --count 3                      # Generate 3 options to choose from
-claude_commit commit --dry-run                      # Show prompt without API call
-claude_commit commit --verbose                      # Show full API interaction
-claude_commit commit -v                             # Short form of --verbose
-claude_commit commit --type fix --context "auth issue" --count 2  # Combine flags
+mango commit --type feat                    # Force specific commit type
+mango commit --context "fixing bug #123"    # Provide additional context
+mango commit --count 3                      # Generate 3 options to choose from
+mango commit --dry-run                      # Show prompt without API call
+mango commit --verbose                      # Show full API interaction
+mango commit -v                             # Short form of --verbose
+mango commit --type fix --context "auth issue" --count 2  # Combine flags
 ```
 
 ## Available Models
@@ -112,17 +112,17 @@ claude_commit commit --type fix --context "auth issue" --count 2  # Combine flag
 ### Configuration
 
 ```bash
-$ claude_commit config --api-key "sk-ant-api03-..." --model "claude-sonnet-4-6"
+$ mango config --api-key "sk-ant-api03-..." --model "claude-sonnet-4-6"
 Configuration saved successfully
 API Key: sk-a****...
 Model: claude-sonnet-4-6
 
-$ claude_commit view
+$ mango view
 Current Configuration:
 API Key: sk-a****...
 Model: claude-sonnet-4-6
 
-$ claude_commit models
+$ mango models
 Available Models:
 claude-opus-4-8
 claude-sonnet-4-6 [CURRENT]
@@ -134,28 +134,28 @@ claude-haiku-4-5
 ```bash
 # Basic usage
 $ git add .
-$ claude_commit commit
+$ mango commit
 ⚙️  Analyzing git diff with Claude AI...
 ✓ Commit message generated
 
 git commit -m "feat: add user authentication and password reset functionality"
 
 # Force a specific commit type
-$ claude_commit commit --type fix
+$ mango commit --type fix
 ⚙️  Analyzing git diff with Claude AI...
 ✓ Commit message generated
 
 git commit -m "fix: resolve authentication timeout issue"
 
 # Provide additional context
-$ claude_commit commit --context "resolves issue #123"
+$ mango commit --context "resolves issue #123"
 ⚙️  Analyzing git diff with Claude AI...
 ✓ Commit message generated
 
 git commit -m "fix: prevent null pointer in user profile handler"
 
 # Generate multiple options
-$ claude_commit commit --count 3
+$ mango commit --count 3
 ⚙️  Analyzing git diff with Claude AI...
 ✓ Commit message options generated
 
@@ -164,7 +164,7 @@ $ claude_commit commit --count 3
 3. feat: add JWT-based authentication middleware
 
 # Dry run to see the prompt without API call
-$ claude_commit commit --dry-run
+$ mango commit --dry-run
 Prompt being sent to Claude:
 ─────────────────────────────────────────
 Generate a conventional commit message based on the following git diff.
@@ -174,7 +174,7 @@ Generate a conventional commit message based on the following git diff.
 ⚠️  Dry run mode - API not called
 
 # Verbose mode to see full interaction
-$ claude_commit commit --verbose
+$ mango commit --verbose
 Prompt being sent to Claude:
 ─────────────────────────────────────────
 Generate a conventional commit message based on the following git diff.
@@ -195,8 +195,8 @@ git commit -m "feat: add user authentication system"
 ### Version Information
 
 ```bash
-$ claude_commit --version
-Claude Commit v1.2.3
+$ mango --version
+Mango v1.2.3
 Build Date: 2024-01-15T10:30:00Z
 Commit: abc1234
 Generate conventional commit messages with Anthropic's Claude
@@ -209,9 +209,9 @@ Generate conventional commit messages with Anthropic's Claude
 Force the LLM to use a specific commit type. Useful when you know the category of your changes and want to avoid ambiguity.
 
 ```bash
-claude_commit commit --type feat    # Force feature type
-claude_commit commit --type fix     # Force bug fix type
-claude_commit commit --type docs    # Force documentation type
+mango commit --type feat    # Force feature type
+mango commit --type fix     # Force bug fix type
+mango commit --type docs    # Force documentation type
 ```
 
 ### --context flag
@@ -222,9 +222,9 @@ Provide additional context to help the LLM generate a more accurate commit messa
 - You want to emphasize a particular aspect of the changes
 
 ```bash
-claude_commit commit --context "resolves issue #123"
-claude_commit commit --context "breaking change for API v2"
-claude_commit commit --context "performance optimization for large datasets"
+mango commit --context "resolves issue #123"
+mango commit --context "breaking change for API v2"
+mango commit --context "performance optimization for large datasets"
 ```
 
 ### --count flag
@@ -232,8 +232,8 @@ claude_commit commit --context "performance optimization for large datasets"
 Generate multiple commit message options. This addresses ambiguity by giving you choices when the nature of the change could be interpreted different ways (e.g., is it a "feat" or a "fix"?).
 
 ```bash
-claude_commit commit --count 3    # Get 3 different options
-claude_commit commit --count 5    # Get 5 different options
+mango commit --count 3    # Get 3 different options
+mango commit --count 5    # Get 5 different options
 ```
 
 When using `--count`, the tool displays numbered options instead of a git command, allowing you to pick the most appropriate one.
@@ -246,8 +246,8 @@ Show the prompt that will be sent to Claude without actually calling the API. Pe
 - Saving API costs during experimentation
 
 ```bash
-claude_commit commit --dry-run
-claude_commit commit --type feat --count 3 --dry-run    # See how flags affect prompt
+mango commit --dry-run
+mango commit --type feat --count 3 --dry-run    # See how flags affect prompt
 ```
 
 When using `--dry-run`, the tool displays the complete prompt and exits without making an API call.
@@ -260,9 +260,9 @@ Show the full API interaction including both the prompt sent and the raw respons
 - Seeing the complete request/response cycle
 
 ```bash
-claude_commit commit --verbose
-claude_commit commit -v                    # Short form
-claude_commit commit -v --type fix         # Combine with other flags
+mango commit --verbose
+mango commit -v                    # Short form
+mango commit -v --type fix         # Combine with other flags
 ```
 
 When using `--verbose`, the tool shows:
@@ -277,16 +277,16 @@ All flags can be combined for maximum control:
 
 ```bash
 # Get 3 fix-type options with context
-claude_commit commit --type fix --context "resolves #123" --count 3
+mango commit --type fix --context "resolves #123" --count 3
 
 # Get 2 feature options with context
-claude_commit commit --type feat --context "new payment gateway" --count 2
+mango commit --type feat --context "new payment gateway" --count 2
 
 # Test prompt generation without API call
-claude_commit commit --type feat --context "new feature" --dry-run
+mango commit --type feat --context "new feature" --dry-run
 
 # Debug full API interaction
-claude_commit commit --verbose --count 3
+mango commit --verbose --count 3
 ```
 
 ## Commit Message Format
@@ -313,21 +313,21 @@ claude_commit commit --verbose --count 3
 
 ## How It Works
 
-1. Reads your Anthropic API key from config (stored in `~/.claude-commit/config.json`)
+1. Reads your Anthropic API key from config (stored in `~/.mango/config.json`)
 2. Gets staged changes with `git diff --staged`
 3. Sends the diff and detailed prompt to Claude API
 4. Returns a formatted git commit command
 
 ## Configuration Storage
 
-Your configuration is stored in a JSON file at `~/.claude-commit/config.json`. The API key is stored in plaintext, so ensure appropriate file permissions are set.
+Your configuration is stored in a JSON file at `~/.mango/config.json`. The API key is stored in plaintext, so ensure appropriate file permissions are set.
 
 ## Features
 
 - Built on [Cobra](https://github.com/spf13/cobra) for CLI ergonomics
 - Follows conventional commit best practices
 - Uses conventional commit format
-- Configuration stored in `~/.claude-commit/config.json`
+- Configuration stored in `~/.mango/config.json`
 - API key masking for display security
 - Colorized terminal output
 - Version information with build details
@@ -363,8 +363,8 @@ talks to `os`, `os/exec`, and `net/http` directly — tests exercise real behavi
 ### Building from Source
 
 ```bash
-git clone https://github.com/natrimmer/claude_commit.git
-cd claude_commit
+git clone https://github.com/natrimmer/mango.git
+cd mango
 
 # The devenv environment provides all necessary tools
 # Install dependencies are handled automatically by devenv
@@ -410,7 +410,7 @@ git push origin v1.2.3
 
 # Build will automatically use the tag
 build
-./claude_commit --version  # Shows: Claude Commit v1.2.3
+./mango --version  # Shows: Mango v1.2.3
 ```
 
 ### Release Process
@@ -497,7 +497,7 @@ git push origin --delete v1.2.3
 
 ```bash
 # Enter the development environment
-cd claude_commit  # devenv activates automatically with direnv
+cd mango  # devenv activates automatically with direnv
 
 # Make changes, then test
 fmt      # Format code
@@ -507,5 +507,5 @@ ci       # Run full CI suite
 
 # Build and test
 build
-./claude_commit --version
+./mango --version
 ```

@@ -1,4 +1,4 @@
-module github.com/natrimmer/claude_commit
+module github.com/natrimmer/mango
 
 go 1.25
 
