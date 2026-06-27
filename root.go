@@ -9,7 +9,7 @@ import (
 
 // tagline is the product one-liner, kept provider-neutral so it survives
 // adding API providers beyond Claude.
-const tagline = "Generate conventional commit messages with AI"
+const tagline = "Generate conventional commit messages from your staged changes"
 
 // Version information - set at build time with ldflags.
 var (

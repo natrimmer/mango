@@ -1,6 +1,6 @@
 # 🥭 mango
 
-Generate conventional commit messages from your staged changes, using AI.
+Generate conventional commit messages from your staged changes.
 
 ```bash
 git add .
