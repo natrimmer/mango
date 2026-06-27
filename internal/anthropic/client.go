@@ -60,7 +60,9 @@ func (c *Client) GenerateCommitMessage(cfg config.Config, prompt string) (string
 				Content: prompt,
 			},
 		},
-		MaxTokens: 50,
+		// max_tokens is a ceiling billed on actual output, not the cap — set
+		// generously so multi-message (--count) responses don't truncate.
+		MaxTokens: 1024,
 	}
 
 	jsonBody, err := json.Marshal(requestBody)

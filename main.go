@@ -59,7 +59,7 @@ func main() {
 	// Define command flag sets
 	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
 	apiKey := configCmd.String("api-key", "", "Anthropic API key")
-	modelFlag := configCmd.String("model", config.DefaultModel, "Anthropic model to use")
+	modelFlag := configCmd.String("model", "", "Anthropic model to use")
 
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
 	commitType := commitCmd.String("type", "", "Commit type (feat, fix, docs, etc.)")
