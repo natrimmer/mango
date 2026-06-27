@@ -160,11 +160,11 @@ func runCommit(commitType, context string, count int, dryRun, verbose bool) erro
 		fmt.Println()
 	}
 	if dryRun {
-		printWarning("⚠️  Dry run mode - API not called")
+		printWarning("Dry run mode - API not called")
 		return nil
 	}
 
-	fmt.Println(Dim + "⚙️  Analyzing git diff with Claude AI..." + Reset)
+	fmt.Println(Dim + "Analyzing git diff with Claude..." + Reset)
 
 	msg, err := generateCommitMessage(*cfg, prompt)
 	if err != nil {
@@ -181,7 +181,7 @@ func runCommit(commitType, context string, count int, dryRun, verbose bool) erro
 	}
 
 	if count > 1 {
-		printSuccess("✓ Commit message options generated")
+		printSuccess("Commit message options generated")
 		fmt.Println()
 		for i, line := range strings.Split(msg, "\n") {
 			if line = strings.TrimSpace(line); line != "" {
@@ -189,7 +189,7 @@ func runCommit(commitType, context string, count int, dryRun, verbose bool) erro
 			}
 		}
 	} else {
-		printSuccess("✓ Commit message generated")
+		printSuccess("Commit message generated")
 		fmt.Println()
 		fmt.Println(Bold + fmt.Sprintf("git commit -m %q", msg) + Reset)
 	}

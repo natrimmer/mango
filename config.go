@@ -149,7 +149,7 @@ var modelsCmd = &cobra.Command{
 }
 
 func init() {
-	configCmd.Flags().String("api-key", "", "Anthropic API key")
-	configCmd.Flags().String("model", "", "Anthropic model to use")
+	configCmd.Flags().String("api-key", "", "API key for the model provider")
+	configCmd.Flags().String("model", "", "Model to use")
 	rootCmd.AddCommand(configCmd, viewCmd, modelsCmd)
 }

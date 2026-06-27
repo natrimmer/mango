@@ -6,6 +6,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// tagline is the product one-liner, kept provider-neutral so it survives
+// adding API providers beyond Claude.
+const tagline = "Generate conventional commit messages with AI"
+
 // Version information - set at build time with ldflags.
 var (
 	version   = "v0.0.0-dev"
@@ -15,7 +19,7 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:           "mango",
-	Short:         "Generate conventional commit messages with Anthropic's Claude",
+	Short:         tagline,
 	Version:       version,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -36,5 +40,5 @@ func versionString() string {
 		s += Dim + "Build Date: " + buildDate + Reset + "\n"
 		s += Dim + "Commit: " + commitSHA + Reset + "\n"
 	}
-	return s + Dim + "Generate conventional commit messages with Anthropic's Claude" + Reset + "\n"
+	return s + Dim + tagline + Reset + "\n"
 }

@@ -14,6 +14,6 @@ const (
 	Cyan    = "\033[36m"
 )
 
-func printSuccess(msg string) { fmt.Println(Green + msg + Reset) }
+func printSuccess(msg string) { fmt.Println(Green + "✓ " + msg + Reset) }
 func printError(msg string)   { fmt.Println(Red + msg + Reset) }
 func printWarning(msg string) { fmt.Println(Yellow + msg + Reset) }
