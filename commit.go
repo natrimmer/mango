@@ -152,7 +152,7 @@ func lastMsgPath() (string, error) {
 	return strings.TrimSpace(string(out)) + "/MANGO_COMMIT_MSG", nil
 }
 
-func runCommit(commitType, context string, count int, dryRun, verbose, retry bool) error {
+func runCommit(commitType, context string, count int, dryRun, verbose, retry, yesFlag bool) error {
 	if retry {
 		path, err := lastMsgPath()
 		if err != nil {
@@ -162,7 +162,19 @@ func runCommit(commitType, context string, count int, dryRun, verbose, retry boo
 		if err != nil {
 			return fmt.Errorf("no message to retry (run mango commit first): %w", err)
 		}
-		return commitLoop(strings.TrimSpace(string(msg)))
+		chosen := strings.TrimSpace(string(msg))
+		// Confirm before recommitting so an accidental --retry doesn't commit a
+		// stale message. Non-TTY (CI) or --yes: commit without a prompt.
+		if isInteractive() && !yesFlag {
+			fmt.Println()
+			fmt.Println(Bold + chosen + Reset)
+			fmt.Println()
+			if !yes(promptLine("Recommit this message? [Y/n] ")) {
+				printWarning("Aborted — nothing committed")
+				return nil
+			}
+		}
+		return commitLoop(chosen)
 	}
 
 	cfg, err := loadConfig()
@@ -342,10 +354,11 @@ var commitCmd = &cobra.Command{
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		retry, _ := cmd.Flags().GetBool("retry")
+		yesFlag, _ := cmd.Flags().GetBool("yes")
 		if commitType != "" && !slices.Contains(conventionalTypes, commitType) {
 			return fmt.Errorf("invalid type %q. Valid types: %s", commitType, strings.Join(conventionalTypes, ", "))
 		}
-		return runCommit(commitType, context, count, dryRun, verbose, retry)
+		return runCommit(commitType, context, count, dryRun, verbose, retry, yesFlag)
 	},
 }
 
@@ -356,5 +369,6 @@ func init() {
 	commitCmd.Flags().Bool("dry-run", false, "Show prompt without calling the API")
 	commitCmd.Flags().BoolP("verbose", "v", false, "Show prompt and full API interaction")
 	commitCmd.Flags().Bool("retry", false, "Recommit the last generated message without calling the API")
+	commitCmd.Flags().BoolP("yes", "y", false, "Skip the retry confirmation prompt")
 	rootCmd.AddCommand(commitCmd)
 }
