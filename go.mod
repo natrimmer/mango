@@ -1,3 +1,3 @@
 module github.com/natrimmer/claude_commit
 
-go 1.21
+go 1.25
