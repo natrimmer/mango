@@ -170,6 +170,8 @@ func TestGenerateViaClaudeCode_Errors(t *testing.T) {
 func TestGenerateCommitMessage_RequestBody(t *testing.T) {
 	var seen map[string]any
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Decoding into a non-nil map merges keys, so start fresh each request.
+		seen = nil
 		_ = json.NewDecoder(r.Body).Decode(&seen)
 		if r.Header.Get("x-api-key") != "secret" {
 			t.Errorf("missing api key header")
@@ -192,9 +194,33 @@ func TestGenerateCommitMessage_RequestBody(t *testing.T) {
 
 	// Models that think by default must be told not to, or the reasoning eats
 	// the max_tokens budget the commit message is supposed to fit in.
-	_, _ = generateCommitMessage(Config{ApiKey: "secret", Model: "claude-opus-5"}, "hello")
-	thinking, ok := seen["thinking"].(map[string]any)
-	if !ok || thinking["type"] != "disabled" {
-		t.Errorf("thinking not disabled for claude-opus-5: %v", seen["thinking"])
+	// Each model accepts a different off switch; the wrong one is a 400.
+	for model, want := range map[string]string{
+		"claude-opus-5":     "disabled",
+		"claude-sonnet-5":   "disabled",
+		"claude-haiku-5-5":  "disabled",
+		"claude-sonnet-5-5": "between_tools",
+	} {
+		_, _ = generateCommitMessage(Config{ApiKey: "secret", Model: model}, "hello")
+		thinking, ok := seen["thinking"].(map[string]any)
+		if !ok || thinking["type"] != want {
+			t.Errorf("%s: thinking = %v, want type %q", model, seen["thinking"], want)
+		}
+	}
+
+	// Models that always think reject any thinking setting but "adaptive", so
+	// they get low effort and more room instead.
+	for _, model := range []string{"claude-opus-5-5", "claude-fable-5-1"} {
+		_, _ = generateCommitMessage(Config{ApiKey: "secret", Model: model}, "hello")
+		if _, ok := seen["thinking"]; ok {
+			t.Errorf("%s: thinking sent to a model that rejects it: %v", model, seen["thinking"])
+		}
+		oc, _ := seen["output_config"].(map[string]any)
+		if oc["effort"] != "low" {
+			t.Errorf("%s: output_config = %v, want effort low", model, seen["output_config"])
+		}
+		if seen["max_tokens"] != float64(4096) {
+			t.Errorf("%s: max_tokens = %v, want 4096", model, seen["max_tokens"])
+		}
 	}
 }

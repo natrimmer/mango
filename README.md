@@ -72,11 +72,15 @@ Set with `mango config set --provider <name>`:
 
 Set with `mango config set --model <name>` (both providers accept the same names):
 
-- `claude-opus-5` — most capable, slower, pricier
-- `claude-opus-4-8` — previous Opus
-- `claude-sonnet-5` — **default**, balanced
-- `claude-sonnet-4-6` — previous Sonnet
-- `claude-haiku-4-5` — fastest, cheapest
+- `claude-fable-5-1` — most capable, slowest, priciest
+- `claude-opus-5-5` — strong and cheaper than Fable
+- `claude-opus-5` — previous Opus
+- `claude-opus-4-8` — older Opus
+- `claude-sonnet-5-5` — **default**, balanced
+- `claude-sonnet-5` — previous Sonnet
+- `claude-sonnet-4-6` — older Sonnet
+- `claude-haiku-5-5` — fastest, cheapest
+- `claude-haiku-4-5` — previous Haiku
 
 <details>
 <summary>Commit message format & conventional types</summary>

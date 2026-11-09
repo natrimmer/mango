@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultModel = "claude-sonnet-5"
+const defaultModel = "claude-sonnet-5-5"
 
 // Providers are the two ways mango can reach a model: a direct API call with a
 // stored key, or the locally installed `claude` CLI in headless mode.
@@ -24,10 +24,14 @@ const (
 var availableProviders = []string{providerAPI, providerClaudeCode}
 
 var availableModels = []string{
+	"claude-fable-5-1",
+	"claude-opus-5-5",
 	"claude-opus-5",
 	"claude-opus-4-8",
+	"claude-sonnet-5-5",
 	"claude-sonnet-5",
 	"claude-sonnet-4-6",
+	"claude-haiku-5-5",
 	"claude-haiku-4-5",
 }
 

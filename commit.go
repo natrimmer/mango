@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"os/exec"
@@ -54,10 +55,22 @@ type anthropicResponse struct {
 	} `json:"content"`
 }
 
-// thinkingByDefault lists models that reason before answering unless told not
-// to. Writing a commit message needs no reasoning, and the thinking tokens
-// would come out of the same max_tokens budget as the message itself.
-var thinkingByDefault = []string{"claude-opus-5"}
+// quietThinking holds the request fields that stop or limit reasoning for each
+// model that thinks by default. Writing a commit message needs no reasoning,
+// and the thinking tokens come out of the same max_tokens budget as the
+// message itself. The models reject different settings, so each gets its own.
+var quietThinking = map[string]map[string]any{
+	"claude-opus-5":    {"thinking": map[string]any{"type": "disabled"}},
+	"claude-sonnet-5":  {"thinking": map[string]any{"type": "disabled"}},
+	"claude-haiku-5-5": {"thinking": map[string]any{"type": "disabled"}},
+	// This model returns a 400 for "disabled". "between_tools" is its off switch.
+	"claude-sonnet-5-5": {"thinking": map[string]any{"type": "between_tools"}},
+	// These models always think and return a 400 for any off switch. Low
+	// effort keeps the reasoning short, and the higher max_tokens leaves room
+	// for the message after it.
+	"claude-opus-5-5":  {"output_config": map[string]any{"effort": "low"}, "max_tokens": 4096},
+	"claude-fable-5-1": {"output_config": map[string]any{"effort": "low"}, "max_tokens": 4096},
+}
 
 func generateCommitMessage(cfg Config, prompt string) (string, error) {
 	if cfg.Provider == providerClaudeCode {
@@ -107,9 +120,7 @@ func generateViaAPI(cfg Config, prompt string) (string, error) {
 		"max_tokens": 1024, // ceiling billed on actual output; generous so --count doesn't truncate
 		"messages":   []map[string]string{{"role": "user", "content": prompt}},
 	}
-	if slices.Contains(thinkingByDefault, cfg.Model) {
-		payload["thinking"] = map[string]any{"type": "disabled"}
-	}
+	maps.Copy(payload, quietThinking[cfg.Model])
 
 	reqBody, err := json.Marshal(payload)
 	if err != nil {
