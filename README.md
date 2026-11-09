@@ -109,14 +109,14 @@ colors.go  ANSI helpers
 
 Tests exercise real behavior (temp `HOME` for config, `httptest` for the API, a stub executable for the `claude` CLI) rather than mocks.
 
-The [devenv](https://devenv.sh) shell prints its command menu on entry (run `menu` to see it again): `build`, `test-code`, `test-coverage`, `test-race`, `bench`, `fmt`, `vet`, `lint`, `ci`, `clean`.
+Tasks live in the [justfile](justfile) (run `just` to list them): `build`, `build-release`, `test`, `test-coverage`, `test-race`, `bench`, `fmt`, `vet`, `lint`, `ci`, `clean`. You need Go and, for `lint` and `ci`, [golangci-lint](https://golangci-lint.run).
 
 </details>
 
 <details>
 <summary>Releasing</summary>
 
-Versions are git tags ([SemVer](https://semver.org)). In the devenv shell, `bump <major|minor|patch>` bumps and pushes a tag after a confirmation prompt; pushing a `vX.Y.Z` tag triggers GitHub Actions to build binaries (Linux/macOS/Windows, amd64 + arm64) and publish a release.
+Versions are git tags ([SemVer](https://semver.org)). `just bump <major|minor|patch>` bumps and pushes a tag after a confirmation prompt; pushing a `vX.Y.Z` tag triggers GitHub Actions to build binaries (Linux/macOS/Windows, amd64 + arm64) and publish a release.
 
 Manual: `git tag v1.2.3 && git push origin v1.2.3`. Rollback: `git tag -d v1.2.3 && git push origin --delete v1.2.3` (delete the GitHub release by hand if it already built).
 
